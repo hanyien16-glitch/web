@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>台灣旅遊美食地圖 - 22縣市美圖版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0284c7;
+            --accent: #f43f5e;
+            --food: #f59e0b;
+            --spot: #10b981;
+            --bg: #f8fafc;
+        }
+
+        * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+        body { margin: 0; background: var(--bg); color: #1e293b; }
+
+        header {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+
+        header h1 { margin: 0; font-size: 3rem; font-weight: 700; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        header p { font-size: 1.2rem; margin-top: 10px; opacity: 0.9; }
+
+        .search-container {
+            max-width: 700px;
+            margin: -40px auto 40px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-box {
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border-radius: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            outline: none;
+            font-size: 1.1rem;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 25px 60px; }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(2, 132, 199, 0.3);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: 0.4s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .card-img {
+            height: 200px;
+            position: relative;
+            background: #e2e8f0;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: 0.5s;
+        }
+
+        .card:hover .card-img img { transform: scale(1.1); }
+
+        .tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            z-index: 2;
+        }
+
+        .tag-美食 { background: var(--food); }
+        .tag-景點 { background: var(--spot); }
+
+        .fav {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            transition: 0.2s;
+        }
+
+        .card-content { padding: 20px; }
+        .card-content h3 { margin: 0 0 10px; font-size: 1.25rem; color: #0f172a; }
+        .card-content .city-info {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #64748b;
+            gap: 5px;
+        }
+
+        footer { text-align: center; padding: 60px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🇹🇼 台灣旅遊美食地圖</h1>
+    <p>搜羅全台 22 縣市：絕美秘境與必吃風味</p>
+</header>
+
+<div class="search-container">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜尋縣市、景點或美食..." onkeyup="filter()">
+    </div>
+</div>
+
+<div class="container">
+    <div class="filters">
+        <button class="filter-btn active" onclick="setTab('全部')">全部</button>
+        <button class="filter-btn" onclick="setTab('景點')">景點</button>
+        <button class="filter-btn" onclick="setTab('美食')">美食</button>
+        <button class="filter-btn" onclick="setTab('收藏')">我的最愛 ❤️</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+</div>
+
+<footer>
+    <p>© 2026 台灣旅遊美食地圖new | 探索台灣之美</p>
+</footer>
+
+<script>
+    // 完整 22 縣市資料庫與圖片關鍵字
+    const data = [
+        /* 北部 */
+        { title: "台北101", city: "台北市", type: "景點", img: "taipei,landmark" },
+        { title: "牛肉麵", city: "台北市", type: "美食", img: "beef,noodle,bowl" },
+        { title: "九份老街", city: "新北市", type: "景點", img: "jiufen,taiwan" },
+        { title: "深坑臭豆腐", city: "新北市", type: "美食", img: "tofu,food" },
+        { title: "正濱漁港", city: "基隆市", type: "景點", img: "keelung,harbor" },
+        { title: "鼎邊趖", city: "基隆市", type: "美食", img: "soup,taiwan" },
+        { title: "大溪老街", city: "桃園市", type: "景點", img: "daxi,street" },
+        { title: "大溪豆干", city: "桃園市", type: "美食", img: "tofu,snack" },
+        { title: "南寮漁港", city: "新竹市", type: "景點", img: "hsinchu,port" },
+        { title: "新竹貢丸", city: "新竹市", type: "美食", img: "meatball,soup" },
+        { title: "北埔老街", city: "新竹縣", type: "景點", img: "village,taiwan" },
+        { title: "客家擂茶", city: "新竹縣", type: "美食", img: "tea,drink" },
+        { title: "礁溪溫泉", city: "宜蘭縣", type: "景點", img: "hotspring" },
+        { title: "三星蔥油餅", city: "宜蘭縣", type: "美食", img: "pancake,scallion" },
+
+        /* 中部 */
+        { title: "高美濕地", city: "台中市", type: "景點", img: "wetlands,sunset" },
+        { title: "台中太陽餅", city: "台中市", type: "美食", img: "pastry,taiwan" },
+        { title: "勝興車站", city: "苗栗縣", type: "景點", img: "train,station" },
+        { title: "苗栗草莓", city: "苗栗縣", type: "美食", img: "strawberry" },
+        { title: "鹿港天后宮", city: "彰化縣", type: "景點", img: "temple,culture" },
+        { title: "彰化肉圓", city: "彰化縣", type: "美食", img: "meatball,taiwan" },
+        { title: "日月潭", city: "南投縣", type: "景點", img: "sun-moon-lake" },
+        { title: "清境農場", city: "南投縣", type: "景點", img: "farm,sheep" },
+        { title: "北港朝天宮", city: "雲林縣", type: "景點", img: "temple,religion" },
+        { title: "雲林咖啡", city: "雲林縣", type: "美食", img: "coffee,beans" },
+
+        /* 南部 */
+        { title: "阿里山森林鐵路", city: "嘉義縣", type: "景點", img: "forest,train" },
+        { title: "嘉義火雞肉飯", city: "嘉義市", type: "美食", img: "chicken,rice" },
+        { title: "安平古堡", city: "台南市", type: "景點", img: "fort,taiwan" },
+        { title: "牛肉湯", city: "台南市", type: "美食", img: "beef,soup" },
+        { title: "駁二藝術特區", city: "高雄市", type: "景點", img: "art,pier" },
+        { title: "高雄鴨肉飯", city: "高雄市", type: "美食", img: "duck,rice" },
+        { title: "墾丁海灘", city: "屏東縣", type: "景點", img: "beach,ocean" },
+        { title: "萬巒豬腳", city: "屏東縣", type: "美食", img: "pork,food" },
+
+        /* 東部 */
+        { title: "太魯閣峽谷", city: "花蓮縣", type: "景點", img: "canyon,nature" },
+        { title: "花蓮麻糬", city: "花蓮縣", type: "美食", img: "mochi,dessert" },
+        { title: "伯朗大道", city: "台東縣", type: "景點", img: "rice,field" },
+        { title: "台東釋迦", city: "台東縣", type: "美食", img: "custard,apple" },
+
+        /* 離島 */
+        { title: "澎湖雙心石滬", city: "澎湖縣", type: "景點", img: "ocean,heart" },
+        { title: "仙人掌冰", city: "澎湖縣", type: "美食", img: "icecream,pink" },
+        { title: "金門莒光樓", city: "金門縣", type: "景點", img: "chinese,architecture" },
+        { title: "金門貢糖", city: "金門縣", type: "美食", img: "peanut,sweet" },
+        { title: "馬祖藍眼淚", city: "連江縣", type: "景點", img: "blue,sea" },
+        { title: "馬祖老酒麵線", city: "連江縣", type: "美食", img: "noodle,soup" }
+    ];
+
+    let favorites = JSON.parse(localStorage.getItem("tw_map_favs")) || [];
+    let currentTab = '全部';
+
+    function render(list) {
+        const grid = document.getElementById("grid");
+        let html = "";
+        list.forEach(item => {
+            const isFav = favorites.includes(item.title);
+            // 動態搜尋 Unsplash 圖片
+            const imageUrl = `https://images.unsplash.com/featured/800x600?taiwan,${item.img}`;
+            
+            html += `
+            <div class="card">
+                <div class="card-img">
+                    <span class="tag tag-${item.type}">${item.type}</span>
+                    <div class="fav" onclick="toggleFav('${item.title}')">${isFav ? '❤️' : '🤍'}</div>
+                    <img src="${imageUrl}" alt="${item.title}" onclick="openMap('${item.city} ${item.title}')" onerror="this.src='https://via.placeholder.com/800x600?text=${item.title}'">
+                </div>
+                <div class="card-content">
+                    <h3>${item.title}</h3>
+                    <div class="city-info">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+                        ${item.city}
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+        grid.innerHTML = html;
+    }
+
+    function filter() {
+        const key = document.getElementById("searchInput").value.toLowerCase();
+        let filtered = data;
+
+        if (currentTab === '收藏') {
+            filtered = filtered.filter(i => favorites.includes(i.title));
+        } else if (currentTab !== '全部') {
+            filtered = filtered.filter(i => i.type === currentTab);
+        }
+
+        if (key) {
+            filtered = filtered.filter(i => 
+                i.title.includes(key) || i.city.includes(key)
+            );
+        }
+        render(filtered);
+    }
+
+    function setTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.includes(tab));
+        });
+        filter();
+    }
+
+    function toggleFav(title) {
+        if (favorites.includes(title)) {
+            favorites = favorites.filter(t => t !== title);
+        } else {
+            favorites.push(title);
+        }
+        localStorage.setItem("tw_map_favs", JSON.stringify(favorites));
+        filter();
+    }
+
+    function openMap(q) {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`);
+    }
+
+    window.onload = () => render(data);
+</script>
+
+</body>
+</html>
